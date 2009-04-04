@@ -220,7 +220,7 @@ module ThinkingSphinx
       self.bin_path += '/' unless self.bin_path.blank?
       
       if self.allow_star
-        self.index_options[:enable_star]    = true
+        self.index_options[:enable_star]    = 1
         self.index_options[:min_prefix_len] = 1
       end
     end

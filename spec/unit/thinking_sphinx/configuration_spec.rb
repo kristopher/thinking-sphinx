@@ -1,5 +1,11 @@
 require 'spec/spec_helper'
 
+def write_sphinx_yml(settings)
+  open("#{RAILS_ROOT}/config/sphinx.yml", "w") do |f|
+    f.write  YAML.dump(settings)
+  end
+end
+
 describe ThinkingSphinx::Configuration do
   describe "environment class method" do
     before :each do
@@ -48,25 +54,28 @@ describe ThinkingSphinx::Configuration do
           "morphology"        => "stem_ru",
           "charset_type"      => "latin1",
           "charset_table"     => "table",
-          "ignore_chars"      => "e"
+          "ignore_chars"      => "e",
+          "allow_star"        => true
         }
       }
       
-      open("#{RAILS_ROOT}/config/sphinx.yml", "w") do |f|
-        f.write  YAML.dump(@settings)
-      end
+      write_sphinx_yml(@settings)
+      @config = ThinkingSphinx::Configuration.instance
     end
     
     it "should use the accessors to set the configuration values" do
-      config = ThinkingSphinx::Configuration.instance
-      config.send(:parse_config)
+      @config.send(:parse_config)
       
       %w(config_file searchd_log_file query_log_file pid_file searchd_file_path
         address port).each do |key|
-        config.send(key).should == @settings["development"][key]
+        @config.send(key).should == @settings["development"][key]
       end
     end
-    
+
+    it "should set enable_star to 1 in the index options" do
+      @config.index_options[:enable_star].should == 1      
+    end
+
     after :each do
       FileUtils.rm "#{RAILS_ROOT}/config/sphinx.yml"
     end
@@ -132,5 +141,5 @@ describe ThinkingSphinx::Configuration do
       f.read
     }
     file.should_not match(/index alpha_core\s+\{\s+[^\}]*prefix_fields\s+=[^\}]*\}/m)
-  end
+  end  
 end
